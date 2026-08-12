@@ -1,0 +1,75 @@
+/*
+  Arvind's TFT Clock Demo
+  Author: Arvind Patil
+  Location: Nandurbar, India
+  Description:
+    Demonstrates how to display a digital clock on an ILI9341 TFT display
+    using SPI communication. This template separates initialization,
+    drawing, and update logic for clarity.
+*/
+
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+
+// Pin definitions (adjust for your board)
+#define TFT_CS   10
+#define TFT_DC    9
+#define TFT_RST   8
+
+// Create TFT object
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+
+// Clock variables
+int hours = 12;
+int minutes = 34;
+int seconds = 56;
+
+// Function: Initialize TFT
+void setupTFT() {
+  tft.begin();
+  tft.setRotation(1); // Landscape mode
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setTextColor(ILI9341_GREEN);
+  tft.setTextSize(3);
+}
+
+// Function: Draw clock face
+void drawClock(int h, int m, int s) {
+  tft.fillScreen(ILI9341_BLACK); // Clear screen
+  tft.setCursor(40, 100);
+  tft.print("Time: ");
+  tft.print(h);
+  tft.print(":");
+  if (m < 10) tft.print("0"); // Leading zero
+  tft.print(m);
+  tft.print(":");
+  if (s < 10) tft.print("0");
+  tft.print(s);
+}
+
+// Function: Update time (simple increment)
+void updateTime() {
+  seconds++;
+  if (seconds >= 60) {
+    seconds = 0;
+    minutes++;
+  }
+  if (minutes >= 60) {
+    minutes = 0;
+    hours++;
+  }
+  if (hours >= 24) {
+    hours = 0;
+  }
+}
+
+void setup() {
+  setupTFT();
+}
+
+void loop() {
+  drawClock(hours, minutes, seconds);
+  delay(1000); // Update every second
+  updateTime();
+}

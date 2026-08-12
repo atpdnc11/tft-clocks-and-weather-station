@@ -1,0 +1,105 @@
+/*
+  Arvind's TFT Dashboard Demo
+  Author: Arvind Patil
+  Location: Nandurbar, India
+  Description:
+    Combines a digital clock and weather station on the same ILI9341 TFT display.
+    Demonstrates modular design with clear separation of logic.
+*/
+
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+#include <DHT.h>
+
+// Pin definitions (adjust for your board)
+#define TFT_CS   10
+#define TFT_DC    9
+#define TFT_RST   8
+#define DHTPIN    2
+#define DHTTYPE   DHT22  // or DHT11
+
+// Create TFT and DHT objects
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+DHT dht(DHTPIN, DHTTYPE);
+
+// Clock variables
+int hours = 12;
+int minutes = 34;
+int seconds = 56;
+
+// --- Setup Functions ---
+void setupTFT() {
+  tft.begin();
+  tft.setRotation(1); // Landscape
+  tft.fillScreen(ILI9341_BLACK);
+}
+
+void setupSensor() {
+  dht.begin();
+}
+
+// --- Clock Functions ---
+void drawClock(int h, int m, int s) {
+  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
+  tft.setTextSize(3);
+  tft.setCursor(20, 40);
+  tft.print("Time: ");
+  tft.print(h);
+  tft.print(":");
+  if (m < 10) tft.print("0");
+  tft.print(m);
+  tft.print(":");
+  if (s < 10) tft.print("0");
+  tft.print(s);
+}
+
+void updateTime() {
+  seconds++;
+  if (seconds >= 60) { seconds = 0; minutes++; }
+  if (minutes >= 60) { minutes = 0; hours++; }
+  if (hours >= 24) { hours = 0; }
+}
+
+// --- Weather Functions ---
+void drawWeather(float temp, float hum) {
+  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
+  tft.setTextSize(2);
+
+  tft.setCursor(20, 120);
+  tft.print("Temp: ");
+  tft.print(temp);
+  tft.print(" C");
+
+  tft.setCursor(20, 160);
+  tft.print("Humidity: ");
+  tft.print(hum);
+  tft.print(" %");
+}
+
+// --- Main Setup ---
+void setup() {
+  setupTFT();
+  setupSensor();
+}
+
+// --- Main Loop ---
+void loop() {
+  // Update clock
+  drawClock(hours, minutes, seconds);
+  updateTime();
+
+  // Read sensor
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+
+  if (isnan(temp) || isnan(hum)) {
+    tft.setCursor(20, 200);
+    tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
+    tft.print("Sensor Error!");
+  } else {
+    drawWeather(temp, hum);
+  }
+
+  delay(1000); // Update every second
+}

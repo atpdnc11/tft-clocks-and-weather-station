@@ -1,0 +1,86 @@
+/*
+  Arvind's TFT Weather Station Demo
+  Author: Arvind Patil
+  Location: Nandurbar, India
+  Description:
+    Displays temperature and humidity readings on an ILI9341 TFT display.
+    Uses modular functions for initialization, sensor reading, and TFT drawing.
+*/
+
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+#include <DHT.h>
+
+// Pin definitions (adjust for your board)
+#define TFT_CS   10
+#define TFT_DC    9
+#define TFT_RST   8
+#define DHTPIN    2      // Sensor data pin
+#define DHTTYPE   DHT22  // DHT11 or DHT22
+
+// Create TFT and DHT objects
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+DHT dht(DHTPIN, DHTTYPE);
+
+// Function: Initialize TFT
+void setupTFT() {
+  tft.begin();
+  tft.setRotation(1); // Landscape mode
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setTextColor(ILI9341_CYAN);
+  tft.setTextSize(2);
+}
+
+// Function: Initialize Sensor
+void setupSensor() {
+  dht.begin();
+}
+
+// Function: Read sensor values
+float readTemperature() {
+  return dht.readTemperature(); // Celsius
+}
+
+float readHumidity() {
+  return dht.readHumidity();
+}
+
+// Function: Draw weather info
+void drawWeather(float temp, float hum) {
+  tft.fillScreen(ILI9341_BLACK); // Clear screen
+  tft.setCursor(40, 80);
+  tft.print("Weather Station");
+
+  tft.setCursor(40, 120);
+  tft.print("Temp: ");
+  tft.print(temp);
+  tft.print(" C");
+
+  tft.setCursor(40, 160);
+  tft.print("Humidity: ");
+  tft.print(hum);
+  tft.print(" %");
+}
+
+void setup() {
+  setupTFT();
+  setupSensor();
+}
+
+void loop() {
+  float temp = readTemperature();
+  float hum = readHumidity();
+
+  // Handle sensor errors
+  if (isnan(temp) || isnan(hum)) {
+    tft.fillScreen(ILI9341_BLACK);
+    tft.setCursor(40, 120);
+    tft.setTextColor(ILI9341_RED);
+    tft.print("Sensor Error!");
+  } else {
+    drawWeather(temp, hum);
+  }
+
+  delay(2000); // Update every 2 seconds
+}
